@@ -38,7 +38,7 @@ class Table:
             
 
 
-    #if has column returns position of it, if nonexistent returns -1 test
+    #if has column returns position of it, if nonexistent returns -1 
     def getColumn(self,name):
         try:
             pos = self.columnNames.index(name.lower())
