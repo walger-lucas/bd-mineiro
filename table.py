@@ -25,7 +25,7 @@ class Table:
     
     # adiciona uma coluna
     def add_column(self,name):
-        self.columnNames.append(name.lower())
+        self.columnNames.append(name)
         for row in self.rows:
             row.append(None);
     
@@ -38,10 +38,10 @@ class Table:
             
 
 
-    #if has column returns position of it, if nonexistent returns -1 
+    #se possui coluna a encontra, independente se lower ou upper case.
     def getColumn(self,name):
         try:
-            pos = self.columnNames.index(name.lower())
+            pos = self.columnNames.lower().index(name.lower())
             return pos
         except ValueError:
             return -1
