@@ -38,12 +38,22 @@ class Table:
             
 
 
-    #se possui coluna a encontra, independente se lower ou upper case.
+    #se possui coluna a encontra, dependente de case
     def getColumn(self,name):
         try:
-            pos = self.columnNames.lower().index(name.lower())
+            pos = self.columnNames.index(name)
             return pos
         except ValueError:
             return -1
+        
+    def getValue(self,column,index):
+        return self.rows[index][column]
+    
+    
+class TableCoordinate:
+   def __init__(self,table_index,column):
+       self.table_index = table_index
+       self.column = column
+    
 
 
