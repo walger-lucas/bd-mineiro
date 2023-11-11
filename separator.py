@@ -1,5 +1,4 @@
 divisorWords = (' e ',' ou ','==','!=','<','>','!','(',')',',','própega','ladi','com','di cima', 'di baixo') 
-
 def tryAppendLastWord(text,word_start,word_end, separated_text):
     if word_start >= len(text):
         return
@@ -17,11 +16,13 @@ def separator(text):
     separated_text = []
     txt_length = len(text)
     in_quotation = False
+    qu_symbol = ''
     i=0
     word_start = 0
     while i <txt_length:
-        if text[i] == '"':
+        if (text[i] == '"' or text[i] == "'") and (not in_quotation or qu_symbol==text[i]):
             in_quotation = not in_quotation
+            qu_symbol = text[i]
         if not in_quotation:
             for dW in divisorWords:
                 if i+len(dW)<=txt_length and text[i:i+len(dW)].lower() == dW:
