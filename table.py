@@ -11,7 +11,7 @@ def printable_none(row):
 class Table:
 
     def __init__(self,name):
-        self.name = name.lower()
+        self.name = name
         self.columnNames = [] #array with names for each column
         self.rows = [] #Array with an array for each instance
     
