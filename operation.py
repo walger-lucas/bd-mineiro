@@ -4,6 +4,11 @@ class Operation:
     #virtual operation to be overwritten
     def value(self,tables,indexes):
         pass
+    def print(self):
+        pass
+    def printAll(self):
+        self.print()
+        print()
 
 class ConstantOperation(Operation):
     def value(self,tables,indexes):
@@ -12,6 +17,9 @@ class ConstantOperation(Operation):
     def __init__(self,constant):
         self.constant = constant
 
+    def print(self):
+        print(str(self.constant),end='')
+
 class VariableOperation(Operation):
     def value(self,tables,indexes):
         return tables[self.table_coordinate.table_index].getValue(self.table_coordinate.column,indexes[self.table_coordinate.table_index])
@@ -19,38 +27,60 @@ class VariableOperation(Operation):
     def __init__(self,table_coordinate: TableCoordinate):
         self.table_coordinate = table_coordinate
 
+    def print(self):
+        print("Tabela"+str(self.table_coordinate.table_index)+".Coluna"+str(self.table_coordinate.column),end='')
+
 class NotOperation(Operation):
     def __init__(self,op):
         self.op = op
 
     def value(self,tables,indexes):
         return not self.op.value(tables,indexes)
+    
+    def print(self):
+        print("!(",end='')
+        self.op.print()
+        print(")",end='')
 
 class BinaryOperation(Operation):
+        bin_symbol = ' '
         def value(self,tables,indexes):
             pass
 
         def __init__(self,opA,opB):
             self.opA = opA #operacao A, a esquerda
             self.opB = opB #operacao B, a direita
+        
+        def print(self):
+            print("(",end='')
+            self.opA.print()
+            print(")"+self.bin_symbol+"(",end='')
+            self.opB.print()
+            print(")",end='')
+
 
 class EqualOperation(BinaryOperation):
+    bin_symbol = '=='
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) == self.opB.value(tables,indexes)
 
 class NotEqualOperation(BinaryOperation):
+    bin_symbol = '!='
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) != self.opB.value(tables,indexes)
 
 class GreaterThenOperation(BinaryOperation):
+    bin_symbol = '>'
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) > self.opB.value(tables,indexes)
 
 class LesserThenOperation(BinaryOperation):
+    bin_symbol = '<'
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) < self.opB.value(tables,indexes)
 
 class AndOperation(BinaryOperation):
+    bin_symbol = ' e '
     def value(self,tables,indexes):
         if not self.opA.value(tables,indexes):
             return False
@@ -59,6 +89,7 @@ class AndOperation(BinaryOperation):
         return True
 
 class OrOperation(BinaryOperation):
+    bin_symbol = ' ou '
     def value(self,tables,indexes):
         if self.opA.value(tables,indexes):
             return True
