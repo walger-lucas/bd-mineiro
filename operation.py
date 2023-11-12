@@ -1,5 +1,6 @@
-from separator import validParenthesis,removeUnecessaryParenthesis,separator,divisorWords
-from table import TableCoordinate, Table
+from separator import validParenthesis,removeUnecessaryParenthesis
+from table import TableCoordinate
+from syntax import *
 class Operation:
     #virtual operation to be overwritten
     def value(self,tables,indexes):
@@ -38,7 +39,7 @@ class NotOperation(Operation):
         return not self.op.value(tables,indexes)
     
     def print(self):
-        print("!(",end='')
+        print(NOT+"(",end='')
         self.op.print()
         print(")",end='')
 
@@ -60,27 +61,27 @@ class BinaryOperation(Operation):
 
 
 class EqualOperation(BinaryOperation):
-    bin_symbol = '=='
+    bin_symbol = EQUAL
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) == self.opB.value(tables,indexes)
 
 class NotEqualOperation(BinaryOperation):
-    bin_symbol = '!='
+    bin_symbol = NOT_EQUAL
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) != self.opB.value(tables,indexes)
 
 class GreaterThenOperation(BinaryOperation):
-    bin_symbol = '>'
+    bin_symbol = GREATER
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) > self.opB.value(tables,indexes)
 
 class LesserThenOperation(BinaryOperation):
-    bin_symbol = '<'
+    bin_symbol = LESSER
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) < self.opB.value(tables,indexes)
 
 class AndOperation(BinaryOperation):
-    bin_symbol = ' e '
+    bin_symbol = AND
     def value(self,tables,indexes):
         if not self.opA.value(tables,indexes):
             return False
@@ -89,7 +90,7 @@ class AndOperation(BinaryOperation):
         return True
 
 class OrOperation(BinaryOperation):
-    bin_symbol = ' ou '
+    bin_symbol = OR
     def value(self,tables,indexes):
         if self.opA.value(tables,indexes):
             return True
@@ -97,12 +98,12 @@ class OrOperation(BinaryOperation):
             return True
         return False
     
-operationBias = (' e ',' ou ','==','!=','>','<','!') #tuple com o bias para separar operacoes, com as strings de cada operacao
+operationBias = (AND,OR,EQUAL,NOT_EQUAL,GREATER,LESSER,NOT) #tuple com o bias para separar operacoes, com as strings de cada operacao
 def binaryOperationRecursion(operation,text,i):
         opA = text[:i]
         opB = text[i+1:]
         if opA == [] or opB == []:
-            raise Exception("Operação '"+operation+"' necessita de duas entradas: "+ ' '.join(str(element) for element in text)+str(i))
+            raise Exception("Operação '"+operation+"' necessita de duas entradas: "+ ' '.join(str(element) for element in text))
         return opA,opB
 
 def createOperation(sep_text):
@@ -133,25 +134,25 @@ def createOperation(sep_text):
         if found_op:
             break
 
-    if next_operation == operationBias[0]:
+    if next_operation == AND:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
         return AndOperation(createOperation(opA),createOperation(opB))
-    elif next_operation == operationBias[1]:
+    elif next_operation == OR:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
         return OrOperation(createOperation(opA),createOperation(opB))
-    elif next_operation == operationBias[2]:
+    elif next_operation == EQUAL:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
         return EqualOperation(createOperation(opA),createOperation(opB))
-    elif next_operation == operationBias[3]:
+    elif next_operation == NOT_EQUAL:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
         return NotEqualOperation(createOperation(opA),createOperation(opB))
-    elif next_operation == operationBias[4]:
+    elif next_operation == GREATER:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
         return GreaterThenOperation(createOperation(opA),createOperation(opB))
-    elif next_operation == operationBias[5]:
+    elif next_operation == LESSER:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
         return LesserThenOperation(createOperation(opA),createOperation(opB))
-    elif next_operation == operationBias[6]:
+    elif next_operation == NOT:
         if sep_text[:i]!=[] or sep_text[i+1:]:
             raise Exception("Operação '" + next_operation+"' necessita de exatamente uma entrada: " + ' '.join(str(element) for element in sep_text))
         return NotOperation(createOperation(sep_text[i+1:]))

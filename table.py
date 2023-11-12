@@ -49,6 +49,10 @@ class Table:
     def getValue(self,column,index):
         return self.rows[index][column]
     
+    def rowCount(self):
+        return len(self.rows)
+
+    
     
 class TableCoordinate:
    def __init__(self,table_index,column):

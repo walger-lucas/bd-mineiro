@@ -1,5 +1,7 @@
 from table import TableCoordinate
-divisorWords = (' e ',' ou ','==','!=','<','>','!','(',')',',','própega','ladi','com','di cima', 'di baixo')
+from syntax import *
+from database import database
+divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',',',SELECT,FROM,WHERE,' di cima ', ' di baixo ')
 # append da palavra nao divisora entre palavras divisoras
 def tryAppendLastWord(text,word_start,word_end, separated_text):
     if word_start >= len(text):
@@ -16,6 +18,7 @@ def tryAppendLastWord(text,word_start,word_end, separated_text):
 
 #divide texto em uma lista de variáveis e operacoes
 def separator(text):
+    text = " "+text+" "
     separated_text = []
     txt_length = len(text)
     in_quotation = False
@@ -77,7 +80,7 @@ def setupVariablesAndConstants(sep_text, tables):
             new_text.append(word[1:-1])
             continue
         #analisa se apenas há numeros e ou um ponto, e os transforma em ints e floats
-        isNumber,isFloat = IsNumeric(word)
+        isNumber,isFloat = isNumeric(word)
         if isNumber and isFloat:
             new_text.append(float(word)) 
             continue
@@ -85,11 +88,11 @@ def setupVariablesAndConstants(sep_text, tables):
             new_text.append(int(word)) 
             continue
         #Procura por uma tabela.coluna no texto
-        new_text.append(IsTable(word,tables))
+        new_text.append(isTable(word,tables))
     return new_text
 
 # retorna se string eh um numero ou um inteiro ou nenhum
-def IsNumeric(word):
+def isNumeric(word):
     isFloat = False
     isNumber = True
     for c in word:
@@ -104,7 +107,7 @@ def IsNumeric(word):
     return isNumber,isFloat
 
 # testa se palavra eh uma coluna de alguma das tabelas dads, e retorna um TableCoordinate caso sim, e uma Exception caso nao
-def IsTable(word,tables):
+def isTable(word,tables):
     len_word = len(word)
     dot_position = -1
     for i in range(len_word):
@@ -129,5 +132,68 @@ def IsTable(word,tables):
         raise Exception("Não há uma tabela " + word[:dot_position]+ " nesta query.")
 
 
+#separa todas as funcoes do select
+def separateSelectQuery(sep_query):
+    pos_from = -1
+    pos_where = -1
+    pos_order = -1
+    query_len = len(sep_query)
+    for i in range(query_len):
+        if sep_query[i]== FROM and pos_from==-1:
+            pos_from = i
+        elif sep_query[i]== WHERE and pos_where==-1:
+            pos_where = i
+        elif sep_query[i]== ORDER_BY and pos_order==-1:
+            pos_order = i
+        elif sep_query[i]== FROM and pos_from!=-1:
+            raise Exception(FROM+" apenas pode aparecer uma vez na query.")
+        elif sep_query[i]== WHERE and pos_where!=-1:
+            raise Exception(WHERE+" apenas pode aparecer uma vez na query.")
+        elif sep_query[i]== ORDER_BY and pos_order!=-1:
+            raise Exception(ORDER_BY+" apenas pode aparecer uma vez na query.")
+        elif sep_query[i]== SELECT and i >0:
+            raise Exception(ORDER_BY+" deve aparecer  apenas no inicio")
+    if pos_where < pos_from and pos_where !=-1:
+        raise Exception(WHERE + "deve aparecer depois de"+ FROM)
+    if pos_where > pos_order and pos_order!=-1:
+        raise Exception(ORDER_BY + "deve aparecer depois de"+ WHERE)
+    where_text =sep_query[pos_where+1:]
+    order_text =sep_query[pos_order+1:]
+    from_text = sep_query[pos_from+1:]
+    select_text = sep_query[1:pos_from]
+    if pos_order == -1:
+        order_text=[]
+    else:
+        where_text= sep_query[pos_where+1:pos_order]
+    if pos_where == -1:
+        where_text = []
+    else:
+        from_text = sep_query[pos_from+1:pos_where]
+    if pos_from == -1:
+        raise Exception("É obrigatório a operação " +FROM + " na query")
+    return select_text,from_text,where_text,order_text
 
+# encontra as colunas das tables que devem ser adicionadas
+def getColumns(select_q,tables):
+    columns = []
+    for word in select_q:
+        if word == ',':
+            continue
+        columns.append(isTable(word,tables))
+    return columns
 
+# encontra as tabelas da database que serão utilizadas
+def findTables(from_q):
+    tables = []
+    for word in from_q:
+        if word == ',':
+            continue
+        table_found = False
+        for table in database:
+            if table.name == word:
+                tables.append(table)
+                table_found=True
+                break
+        if not table_found:
+            raise Exception("Não há uma tabela " + word+ " nesta query.")
+    return tables
