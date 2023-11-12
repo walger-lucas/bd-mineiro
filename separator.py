@@ -1,7 +1,11 @@
 from table import TableCoordinate
 from syntax import *
 from database import database
-divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',',',SELECT,FROM,WHERE,' di cima ', ' di baixo ')
+# Funcoes que fazem parte do parsing de strings, e 
+# transformar este parsing em objetos úteis para a realização das queries
+
+# palavras de divisao da string de parsing
+divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',',',SELECT,FROM,WHERE,' di cima ', ' di baixo ',ON)
 # append da palavra nao divisora entre palavras divisoras
 def tryAppendLastWord(text,word_start,word_end, separated_text):
     if word_start >= len(text):

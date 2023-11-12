@@ -1,6 +1,7 @@
 from separator import validParenthesis,removeUnecessaryParenthesis
 from table import TableCoordinate
 from syntax import *
+# Funções e classes que informam como sao realizadas operações de validação
 class Operation:
     #virtual operation to be overwritten
     def value(self,tables,indexes):
