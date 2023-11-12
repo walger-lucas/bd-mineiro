@@ -71,7 +71,6 @@ def runQuery(query: str):
             where_q = on_q+where_q
         if i<len_from:
             from_q = from_q[:i]
-        print(where_q)
         #encontra as tabelas que farão parte, pelo parte do from
         tables = findTables(from_q)
         # pega as colunas da nova tabela

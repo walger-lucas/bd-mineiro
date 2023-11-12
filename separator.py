@@ -5,7 +5,7 @@ from database import database
 # transformar este parsing em objetos úteis para a realização das queries
 
 # palavras de divisao da string de parsing
-divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',',',SELECT,FROM,WHERE,' di cima ', ' di baixo ',ON)
+divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',',',SELECT,FROM,WHERE,ASC, DESC,ON, JOIN)
 # append da palavra nao divisora entre palavras divisoras
 def tryAppendLastWord(text,word_start,word_end, separated_text):
     if word_start >= len(text):
@@ -31,6 +31,7 @@ def separator(text):
     word_start = 0
     while i <txt_length:
         # lida com quotations, nao lendo operacoes dentro de quotations
+        found_dw = False
         if (text[i] == '"' or text[i] == "'") and (not in_quotation or qu_symbol==text[i]):
             in_quotation = not in_quotation
             qu_symbol = text[i]
@@ -41,10 +42,12 @@ def separator(text):
                     #se encontrou uma, primeiro adicione a palavra nao divisora anterior a palavra divisora
                     tryAppendLastWord(text,word_start,i,separated_text)
                     separated_text.append(dW)
+                    found_dw=True
                     i+=len(dW)
                     word_start = i
                     break
-        i+=1
+        if not found_dw:
+            i+=1
     tryAppendLastWord(text,word_start,i,separated_text)
     return separated_text
 
@@ -180,6 +183,14 @@ def separateSelectQuery(sep_query):
 # encontra as colunas das tables que devem ser adicionadas
 def getColumns(select_q,tables):
     columns = []
+    if select_q !=[] and select_q[0] == '*':
+        table_len = len(tables)
+        for i in range(table_len):
+            column_len = len(tables[i].columnNames)
+            for j in range(column_len):
+                columns.append(TableCoordinate(i,j))
+        return columns
+
     for word in select_q:
         if word == ',':
             continue
@@ -190,7 +201,7 @@ def getColumns(select_q,tables):
 def findTables(from_q):
     tables = []
     for word in from_q:
-        if word == ',':
+        if word == ',' or word == JOIN:
             continue
         table_found = False
         for table in database:
