@@ -42,7 +42,7 @@ def mergeSort(array, begin:int,end:int,id,asc=True):
     mergeSort(array,mid+1,end,id,asc)
     merge(array,begin,mid,end,id,asc)
 
-
+# faz sorts da table, nos ids dados, ascendentes ou descendentes
 def sortTable(table: Table,ids,asc):
     if ids == []:
         return
