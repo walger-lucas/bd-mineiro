@@ -34,7 +34,6 @@ class Table:
     
     def print(self):
         format_table = "{:>15}"* len(self.columnNames)
-        print('Tabela: '+ self.name)
         print(format_table.format(*self.columnNames))
         print('-'*len(self.columnNames)*15)
         for row in self.rows:

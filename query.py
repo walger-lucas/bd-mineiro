@@ -3,7 +3,7 @@ from operation import Operation, createOperation, SET_OP
 from separator import *
 from syntax import *
 from mergeSort import *
-
+from database import exitDatabase
 
         
 #cria instancia com as colunas dadas

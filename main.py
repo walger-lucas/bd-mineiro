@@ -1,4 +1,6 @@
-from query import *
+from query import runQuery
+from database import isRunning,database
+from table import Table
 
 pessoas = Table('Pessoas')
 pessoas.add_column('Nome')
@@ -16,3 +18,19 @@ carro.add_column('Idade')
 carro.add_instance(["Toyota",29])
 carro.add_instance(["Mitono",35])
 database.append(carro)
+
+running = True
+while(running):
+    try:
+        text = input()
+        if(text =='sair'):
+            running = False
+            continue
+        query = runQuery(text)
+        if query:
+            print()
+            query.print()
+            print()
+    except Exception as e:
+        print(e)
+
