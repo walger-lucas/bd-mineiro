@@ -21,7 +21,10 @@ class Table:
         common_size=len(self.columnNames)
         for i in range(common_size-inst_size):
             instance.append(None)
-        self.rows.append(instance)
+        if inst_size>common_size:
+            self.rows.append(instance[0:common_size])
+        else:
+            self.rows.append(instance)
     
     # adiciona uma coluna
     def add_column(self,name):
@@ -31,6 +34,7 @@ class Table:
     
     def print(self):
         format_table = "{:>15}"* len(self.columnNames)
+        print('Tabela: '+ self.name)
         print(format_table.format(*self.columnNames))
         print('-'*len(self.columnNames)*15)
         for row in self.rows:

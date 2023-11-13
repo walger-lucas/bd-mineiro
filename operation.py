@@ -11,7 +11,6 @@ class Operation:
     def printAll(self):
         self.print()
         print()
-
 class ConstantOperation(Operation):
     def value(self,tables,indexes):
         return self.constant
@@ -44,6 +43,18 @@ class NotOperation(Operation):
         self.op.print()
         print(")",end='')
 
+class NegativeOperation(Operation):
+    def __init__(self,op):
+        self.op = op
+
+    def value(self,tables,indexes):
+        return -self.op.value(tables,indexes)
+    
+    def print(self):
+        print(SUBTRACT+"(",end='')
+        self.op.print()
+        print(")",end='')
+
 class BinaryOperation(Operation):
         bin_symbol = ' '
         def value(self,tables,indexes):
@@ -59,6 +70,19 @@ class BinaryOperation(Operation):
             print(")"+self.bin_symbol+"(",end='')
             self.opB.print()
             print(")",end='')
+
+class SetOperation(BinaryOperation):
+    bin_symbol = SET
+    def value(self,tables,indexes):
+        t_id = self.opA.table_coordinate.table_index
+        t_column = self.opA.table_coordinate.column
+        tables[t_id].rows[indexes[t_id]][t_column] = self.opB.value(tables,indexes)
+
+class SeparateOperation(BinaryOperation):
+    bin_symbol = SEPARATE
+    def value(self,tables,indexes):
+        self.opA.value(tables,indexes)
+        self.opB.value(tables,indexes)
 
 
 class EqualOperation(BinaryOperation):
@@ -80,6 +104,22 @@ class LesserThenOperation(BinaryOperation):
     bin_symbol = LESSER
     def value(self,tables,indexes):
         return self.opA.value(tables,indexes) < self.opB.value(tables,indexes)
+class MultiplyOperation(BinaryOperation):
+    bin_symbol = MULTIPLY
+    def value(self,tables,indexes):
+        return self.opA.value(tables,indexes) * self.opB.value(tables,indexes)
+class DivideOperation(BinaryOperation):
+    bin_symbol = DIVIDE
+    def value(self,tables,indexes):
+        return self.opA.value(tables,indexes) / self.opB.value(tables,indexes)
+class SumOperation(BinaryOperation):
+    bin_symbol = SUM
+    def value(self,tables,indexes):
+        return self.opA.value(tables,indexes) + self.opB.value(tables,indexes)
+class SubtractOperation(BinaryOperation):
+    bin_symbol = SUBTRACT
+    def value(self,tables,indexes):
+        return self.opA.value(tables,indexes) + self.opB.value(tables,indexes)
 
 class AndOperation(BinaryOperation):
     bin_symbol = AND
@@ -99,7 +139,7 @@ class OrOperation(BinaryOperation):
             return True
         return False
     
-operationBias = (AND,OR,EQUAL,NOT_EQUAL,GREATER,LESSER,NOT) #tuple com o bias para separar operacoes, com as strings de cada operacao
+operationBias = (SEPARATE,SET,AND,OR,EQUAL,NOT_EQUAL,GREATER,LESSER,NOT, MULTIPLY,DIVIDE,SUM,SUBTRACT) #tuple com o bias para separar operacoes, com as strings de cada operacao
 def binaryOperationRecursion(operation,text,i):
         opA = text[:i]
         opB = text[i+1:]
@@ -107,7 +147,10 @@ def binaryOperationRecursion(operation,text,i):
             raise Exception("Operação '"+operation+"' necessita de duas entradas: "+ ' '.join(str(element) for element in text))
         return opA,opB
 
-def createOperation(sep_text):
+SET_OP = 0
+VAL_OP = 1
+GEN_OP = 3
+def createOperation(sep_text,kind = GEN_OP):
     if sep_text == []:
         return ConstantOperation(True)
     
@@ -134,6 +177,17 @@ def createOperation(sep_text):
             i+=1
         if found_op:
             break
+    if kind == SET_OP and next_operation == SET:
+        opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
+        return SetOperation(createOperation(opA,VAL_OP),createOperation(opB,GEN_OP))
+    elif kind == SET_OP and next_operation==SEPARATE:
+        opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
+        return SeparateOperation(createOperation(opA,SET_OP),createOperation(opB,SET_OP))
+    elif kind == SET_OP:
+        raise Exception("Operação de SET não válida.")
+    
+    if kind == VAL_OP and (len(sep_text) != 1 or type(sep_text[0]) != TableCoordinate):
+        raise Exception("Operação de Variável não válida.")
 
     if next_operation == AND:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
@@ -153,8 +207,24 @@ def createOperation(sep_text):
     elif next_operation == LESSER:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
         return LesserThenOperation(createOperation(opA),createOperation(opB))
+    elif next_operation == DIVIDE:
+        opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
+        return DivideOperation(createOperation(opA),createOperation(opB))
+    elif next_operation == MULTIPLY:
+        opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
+        return MultiplyOperation(createOperation(opA),createOperation(opB))
+    elif next_operation == SUM:
+        opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
+        return SumOperation(createOperation(opA),createOperation(opB))
+    elif next_operation == SUBTRACT:
+        if sep_text[:i]!=[] and sep_text[i+1:]==[] or sep_text[:i]==[] and sep_text[i+1:]==[]:
+            raise Exception("Operação '" + next_operation+"' necessita de ao menos uma entrada: " + ' '.join(str(element) for element in sep_text))
+        elif sep_text[:i]==[]:
+            return NegativeOperation(createOperation(sep_text[i+1:]))
+        return SubtractOperation(createOperation(sep_text[:i],sep_text[i+1:]))
+        
     elif next_operation == NOT:
-        if sep_text[:i]!=[] or sep_text[i+1:]:
+        if sep_text[:i]!=[] or sep_text[i+1:]==[]:
             raise Exception("Operação '" + next_operation+"' necessita de exatamente uma entrada: " + ' '.join(str(element) for element in sep_text))
         return NotOperation(createOperation(sep_text[i+1:]))
     elif next_operation == '':
@@ -163,7 +233,7 @@ def createOperation(sep_text):
         if type(sep_text[0]) == TableCoordinate:
             return VariableOperation(sep_text[0])
         return ConstantOperation(sep_text[0])
-    return ConstantOperation(False)
+    raise Exception("Não foi possível analisar a operação " + next_operation + " neste contexto.")
 
             
             

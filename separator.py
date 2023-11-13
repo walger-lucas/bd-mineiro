@@ -5,7 +5,7 @@ from database import database
 # transformar este parsing em objetos úteis para a realização das queries
 
 # palavras de divisao da string de parsing
-divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',',',SELECT,FROM,WHERE,ASC, DESC,ON, JOIN)
+divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',SEPARATE,SET,SELECT,FROM,WHERE,ASC, DESC,INSERT_INTO,VALUE,ON, JOIN,DELETE,UPDATE,SET_TEXT,MULTIPLY,DIVIDE,SUM,SUBTRACT,ORDER_BY)
 # append da palavra nao divisora entre palavras divisoras
 def tryAppendLastWord(text,word_start,word_end, separated_text):
     if word_start >= len(text):
@@ -159,7 +159,9 @@ def separateSelectQuery(sep_query):
         elif sep_query[i]== ORDER_BY and pos_order!=-1:
             raise Exception(ORDER_BY+" apenas pode aparecer uma vez na query.")
         elif sep_query[i]== SELECT and i >0:
-            raise Exception(ORDER_BY+" deve aparecer  apenas no inicio")
+            raise Exception(SELECT+" deve aparecer  apenas no inicio")
+        elif sep_query[i]== DELETE and i>0:
+            raise Exception(DELETE+" deve aparecer  apenas no inicio")
     if pos_where < pos_from and pos_where !=-1:
         raise Exception(WHERE + "deve aparecer depois de"+ FROM)
     if pos_where > pos_order and pos_order!=-1:
@@ -172,6 +174,7 @@ def separateSelectQuery(sep_query):
         order_text=[]
     else:
         where_text= sep_query[pos_where+1:pos_order]
+        from_text = sep_query[pos_from+1:pos_order]
     if pos_where == -1:
         where_text = []
     else:
@@ -179,6 +182,23 @@ def separateSelectQuery(sep_query):
     if pos_from == -1:
         raise Exception("É obrigatório a operação " +FROM + " na query")
     return select_text,from_text,where_text,order_text
+
+# separar partes necessarias para uma query de insert
+def separateInsertQuery(sep_query):
+    pos_value = -1
+    query_len = len(sep_query)
+    for i in range(query_len):
+        if sep_query[i] == VALUE and pos_value==-1:
+            pos_value = i
+        elif sep_query[i] == VALUE and VALUE!=-1:
+            raise Exception(VALUE+" apenas pode aparecer uma vez na query.")
+        elif sep_query[i] == INSERT_INTO and i >0:
+            raise Exception(INSERT_INTO+" deve aparecer  apenas no inicio.")
+    if pos_value == -1:
+        raise Exception(VALUE+" deve aparecer em algum momento desta query.")
+    if pos_value+1 >= query_len:
+        return sep_query[1:pos_value],[]
+    return sep_query[1:pos_value], sep_query[pos_value+1:]
 
 # encontra as colunas das tables que devem ser adicionadas
 def getColumns(select_q,tables):
@@ -197,6 +217,55 @@ def getColumns(select_q,tables):
         columns.append(isTable(word,tables))
     return columns
 
+def getOrder(order_q,columns,tables):
+    if order_q == []:
+        return [],[]
+    len_columns = len(columns)
+    order = []
+    asc = []
+    inside = True
+    found_direction = False
+    for word in order_q:
+        if word == ',' and inside == False:
+            if not found_direction:
+                asc.append(True)
+            found_direction=False
+            inside = True
+            continue
+        elif word == ',':
+            raise Exception(" , em local errado em query")
+        if(inside == True):
+            t_coord = isTable(word,tables)
+            for i in range(len_columns):
+                if t_coord.table_index == columns[i].table_index and t_coord.column == columns[i].column:
+                    inside = False
+                    order.append(i)
+                    break
+            if inside == False:
+                continue
+            raise Exception(word + " nao pode ser ordenada")
+        if inside ==False and found_direction==False:
+            if word == ASC:
+                asc.append(True)
+            elif word == DESC:
+                asc.append(False)
+            else:
+                raise Exception(word +" não é uma forma de ordenação.")
+            found_direction = True
+        else:
+            raise Exception("Nao foi possivel analisar a ordenação da query, palavra "+word+" em local inadequado.")
+    if order_q[-1] == ',':
+        raise Exception("Não se pode finalizar order query com ,")
+    if not found_direction:
+        asc.append(True)
+    return order,asc
+                
+
+        
+        
+
+
+
 # encontra as tabelas da database que serão utilizadas
 def findTables(from_q):
     tables = []
@@ -212,3 +281,22 @@ def findTables(from_q):
         if not table_found:
             raise Exception("Não há uma tabela " + word+ " nesta query.")
     return tables
+
+def findValues(value_q):
+    insertion = []
+    for word in value_q:
+        if word== '(' or word ==')' or word==',':
+            continue
+        if (word[0]== '"' and word[-1]== '"') or (word[0]== "'" and word[-1]== "'"):
+            insertion.append(word[1:-1])
+            continue
+        isNumber,isFloat = isNumeric(word)
+        if isNumber and isFloat:
+            insertion.append(float(word)) 
+            continue
+        elif isNumber:
+            insertion.append(int(word)) 
+            continue
+        raise Exception(word+ " não é um valor válido.")
+    
+    return insertion

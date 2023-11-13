@@ -1,7 +1,8 @@
 from table import Table, TableCoordinate
-from operation import Operation, createOperation
+from operation import Operation, createOperation, SET_OP
 from separator import *
 from syntax import *
+from mergeSort import *
 
 
         
@@ -13,7 +14,7 @@ def createInstance(index,columns,tables):
     return instance
 
 # executa query de select
-def run_select(columns,tables,operation:Operation,order):
+def runSelect(columns,tables,operation:Operation,order_id,order_asc):
     new_table = Table("table")
     #adiciona as novas colunas em ordem a tabela
     for column in columns:
@@ -45,19 +46,112 @@ def run_select(columns,tables,operation:Operation,order):
             else:
                 break
         i+=1
+    sortTable(new_table,order_id,order_asc)
     return new_table
 
-
-
-
-def runQuery(query: str):
-    sep_query = separator(query)
-    if sep_query ==[]:
+def runDelete(delete_table_index,tables,operation:Operation):
+    if tables == []:
         return
-    #se é uma query de select
-    if SELECT == sep_query[0]:
+    index = []
+    index_size = []
+    for t in tables:
+        index_size.append(t.rowCount())
+        index.append(0)
+    
+    total = index_size[0]
+    for t in index_size[1:]:
+        total*=t
+    index_len = len(index)
+    i=0
+    #passa por todos os valores possiveis e vê se devem ser deletados
+    delete = [False]*tables[delete_table_index].rowCount()
+    while i<total:
+        if operation.value(tables,index):
+            delete[index[delete_table_index]]=True
+        index[0]+=1
+        for j in range(index_len):
+            if index[j]>= index_size[j] and j+1< index_len:
+                index[j]=0
+                index[j+1]+=1
+            else:
+                break
+        i+=1
+    # deleta todas as entradas marcadas
+    i = tables[delete_table_index].rowCount()-1
+    while i>=0:
+        if delete[i] == True:
+            tables[delete_table_index].rows.pop(i)
+        i-=1
+
+def runUpdate(tables,set_op,where_op):
+    if tables == []:
+        return
+    index = []
+    index_size = []
+    for t in tables:
+        index_size.append(t.rowCount())
+        index.append(0)
+    
+    total = index_size[0]
+    for t in index_size[1:]:
+        total*=t
+    index_len = len(index)
+    i=0
+    #passa por todos os valores possiveis e vê se devem ser deletados
+    while i<total:
+        if where_op.value(tables,index):
+            set_op.value(tables,index)
+        index[0]+=1
+        for j in range(index_len):
+            if index[j]>= index_size[j] and j+1< index_len:
+                index[j]=0
+                index[j+1]+=1
+            else:
+                break
+        i+=1
+
+#processos para a query de selection
+def selectQuery(sep_query):
+    #separa nas 4 partes da query
+    select_q,from_q,where_q,order_q = separateSelectQuery(sep_query)
+    #lida com o a clausula ON
+    len_from= len(from_q)
+    i = 0
+    while i<len_from:
+        if from_q[i] == ON:
+            break
+        i+=1
+    if i+1<len_from:
+        on_q =['('] + from_q[i+1:] + [')']
+        if where_q != []:
+            on_q += [AND]
+        where_q = on_q+where_q
+    if i<len_from:
+        from_q = from_q[:i]
+    #encontra as tabelas que farão parte, pelo parte do from
+    tables = findTables(from_q)
+    # pega as colunas da nova tabela
+    columns = getColumns(select_q,tables)
+    # descobre a operacao de where
+    operation = createOperation(setupVariablesAndConstants(where_q,tables))
+    
+    id_order, id_asc = getOrder(order_q,columns,tables)
+    return runSelect(columns,tables,operation,id_order,id_asc)
+
+# processos para a query de insertion
+def insertQuery(sep_query):
+        insert_q,value_q = separateInsertQuery(sep_query)
+        tables = findTables(insert_q)
+        if len(tables) != 1:
+            raise Exception('Você apenas pode inserir um valor a uma table, não várias.')
+        insertion = findValues(value_q)
+        tables[0].add_instance(insertion)
+
+#  processos para a query de deletion
+def deleteQuery(sep_query):
         #separa nas 4 partes da query
-        select_q,from_q,where_q,order_q = separateSelectQuery(sep_query)
+        delete_q,from_q,where_q,order_q = separateSelectQuery(sep_query)
+        #lida com o a clausula ON
         len_from= len(from_q)
         i = 0
         while i<len_from:
@@ -73,11 +167,55 @@ def runQuery(query: str):
             from_q = from_q[:i]
         #encontra as tabelas que farão parte, pelo parte do from
         tables = findTables(from_q)
-        # pega as colunas da nova tabela
-        columns = getColumns(select_q,tables)
+        # pega a tabela que será deletada
+        delete_tables = findTables(delete_q)
+        len_tables = len(tables)
+        if len(delete_tables) !=1:
+            raise Exception("Apenas pode-se deletar de uma table por vez.")
+        t=0
+        while t<len_tables:
+            if tables[t].name == delete_tables[0].name:
+                break
+        if t == len_tables:
+            raise Exception("Apenas pode-se deletar de uma table que esteja na query.")
+
         # descobre a operacao de where
         operation = createOperation(setupVariablesAndConstants(where_q,tables))
-        return run_select(columns,tables,operation,None)
+        runDelete(t,tables,operation)
+# processos para query de update
+def updateQuery(sep_query):
+        len_q =  len(sep_query)
+        #muda de SET para FROM, para reutilizar funcao de select
+        for i in range(len_q):
+            if sep_query[i]==SET_TEXT:
+                sep_query[i]=FROM
+        update_q,set_q,where_q,order_q = separateSelectQuery(sep_query)
+        tables = findTables(update_q)
+        if(len(update_q)!=1):
+            raise Exception("Apenas pode-se atualizar uma tabela por vez.")
+        set_operation = createOperation(setupVariablesAndConstants(set_q,tables),SET_OP)
+        where_operation = createOperation(setupVariablesAndConstants(where_q,tables))
+        runUpdate(tables,set_operation,where_operation)
+
+# Analisa as queries de import e de select, delete, update e insert
+def runQuery(query: str):
+    sep_query = separator(query)
+    if sep_query ==[]:
+        return
+    #faz o parsing adequado dependendo do tipo de query
+    if SELECT == sep_query[0]:
+        return selectQuery(sep_query)
+    elif INSERT_INTO == sep_query[0]:
+        insertQuery(sep_query)
+    elif DELETE == sep_query[0]:
+        deleteQuery(sep_query)
+    elif UPDATE == sep_query[0]:
+        updateQuery(sep_query)
+
+
+            
+
+
         
         
         
