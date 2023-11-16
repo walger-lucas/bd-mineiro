@@ -5,7 +5,7 @@ from database import database
 # transformar este parsing em objetos úteis para a realização das queries
 
 # palavras de divisao da string de parsing
-divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',SEPARATE,SET,SELECT,FROM,WHERE,ASC, DESC,INSERT_INTO,VALUE,ON, JOIN,DELETE,UPDATE,SET_TEXT,MULTIPLY,DIVIDE,SUM,SUBTRACT,ORDER_BY,EXIT)
+divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',SEPARATE,SET,SELECT,FROM,WHERE,ASC, DESC,INSERT_INTO,VALUE,ON, JOIN,DELETE,UPDATE,SET_TEXT,MULTIPLY,DIVIDE,SUM,SUBTRACT,ORDER_BY)
 # append da palavra nao divisora entre palavras divisoras
 def tryAppendLastWord(text,word_start,word_end, separated_text):
     if word_start >= len(text):
