@@ -56,23 +56,23 @@ def validParenthesis(sep_text):
     num_parenthesis = 0
     for word in sep_text:
         if word == '(':
-                num_parenthesis+=1
+            num_parenthesis+=1
         elif word == ')':
-                num_parenthesis-=1
+            num_parenthesis-=1
         if num_parenthesis < 0:
-             return False
+            return False
     if num_parenthesis == 0:
-         return True
+        return True
     return False
 
 
 # remove os parentesis externos de um texto separado por palavra divisora se esses parentesis nao forem necessarios para a validade do texto
 def removeUnecessaryParenthesis(sep_text):
     if len(sep_text)==0:
-         return
+        return
     while sep_text[0]== '(' and sep_text[-1]==')' and validParenthesis(sep_text[1:-1]):
-         sep_text.pop()
-         sep_text.pop(0)
+        sep_text.pop()
+        sep_text.pop(0)
 
 #faz setup de variaveis e constantes, apenas para statements where
 def setupVariablesAndConstants(sep_text, tables):
@@ -121,9 +121,9 @@ def isTable(word,tables):
         if (word[i]=='.' and dot_position == -1 ):
             dot_position=i
         elif word[i]=='.':
-            raise Exception(word + "não é uma variável válida.")
+            raise ValueError(word + "não é uma variável válida.")
     if dot_position == -1:
-        raise Exception(word + "não é uma variável válida.")
+        raise ValueError(word + "não é uma variável válida.")
     tables_len = len(tables)
     found_table = False
     for j in range(tables_len):
@@ -133,10 +133,10 @@ def isTable(word,tables):
             if column_id!=-1:
                 return TableCoordinate(j,column_id)
             else:
-                raise Exception("Tabela " + tables[j].name + " não possui coluna " + word[dot_position+1:]+" .")
+                raise ValueError("Tabela " + tables[j].name + " não possui coluna " + word[dot_position+1:]+" .")
             break
     if not found_table:
-        raise Exception("Não há uma tabela " + word[:dot_position]+ " nesta query.")
+        raise ValueError("Não há uma tabela " + word[:dot_position]+ " nesta query.")
 
 
 #separa todas as funcoes do select
@@ -153,19 +153,19 @@ def separateSelectQuery(sep_query):
         elif sep_query[i]== ORDER_BY and pos_order==-1:
             pos_order = i
         elif sep_query[i]== FROM and pos_from!=-1:
-            raise Exception(FROM+" apenas pode aparecer uma vez na query.")
+            raise ValueError(FROM+" apenas pode aparecer uma vez na query.")
         elif sep_query[i]== WHERE and pos_where!=-1:
-            raise Exception(WHERE+" apenas pode aparecer uma vez na query.")
+            raise ValueError(WHERE+" apenas pode aparecer uma vez na query.")
         elif sep_query[i]== ORDER_BY and pos_order!=-1:
-            raise Exception(ORDER_BY+" apenas pode aparecer uma vez na query.")
+            raise ValueError(ORDER_BY+" apenas pode aparecer uma vez na query.")
         elif sep_query[i]== SELECT and i >0:
-            raise Exception(SELECT+" deve aparecer  apenas no inicio")
+            raise ValueError(SELECT+" deve aparecer  apenas no inicio")
         elif sep_query[i]== DELETE and i>0:
-            raise Exception(DELETE+" deve aparecer  apenas no inicio")
+            raise ValueError(DELETE+" deve aparecer  apenas no inicio")
     if pos_where < pos_from and pos_where !=-1:
-        raise Exception(WHERE + "deve aparecer depois de"+ FROM)
+        raise ValueError(WHERE + "deve aparecer depois de"+ FROM)
     if pos_where > pos_order and pos_order!=-1:
-        raise Exception(ORDER_BY + "deve aparecer depois de"+ WHERE)
+        raise ValueError(ORDER_BY + "deve aparecer depois de"+ WHERE)
     where_text =sep_query[pos_where+1:]
     order_text =sep_query[pos_order+1:]
     from_text = sep_query[pos_from+1:]
@@ -180,7 +180,7 @@ def separateSelectQuery(sep_query):
     else:
         from_text = sep_query[pos_from+1:pos_where]
     if pos_from == -1:
-        raise Exception("É obrigatório a operação " +FROM + " na query")
+        raise ValueError("É obrigatório a operação " +FROM + " na query")
     return select_text,from_text,where_text,order_text
 
 # separar partes necessarias para uma query de insert
@@ -191,11 +191,11 @@ def separateInsertQuery(sep_query):
         if sep_query[i] == VALUE and pos_value==-1:
             pos_value = i
         elif sep_query[i] == VALUE and VALUE!=-1:
-            raise Exception(VALUE+" apenas pode aparecer uma vez na query.")
+            raise ValueError(VALUE+" apenas pode aparecer uma vez na query.")
         elif sep_query[i] == INSERT_INTO and i >0:
-            raise Exception(INSERT_INTO+" deve aparecer  apenas no inicio.")
+            raise ValueError(INSERT_INTO+" deve aparecer  apenas no inicio.")
     if pos_value == -1:
-        raise Exception(VALUE+" deve aparecer em algum momento desta query.")
+        raise ValueError(VALUE+" deve aparecer em algum momento desta query.")
     if pos_value+1 >= query_len:
         return sep_query[1:pos_value],[]
     return sep_query[1:pos_value], sep_query[pos_value+1:]
@@ -233,7 +233,7 @@ def getOrder(order_q,columns,tables):
             inside = True
             continue
         elif word == ',':
-            raise Exception(" , em local errado em query")
+            raise ValueError(" , em local errado em query")
         if(inside == True):
             t_coord = isTable(word,tables)
             for i in range(len_columns):

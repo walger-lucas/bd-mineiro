@@ -19,7 +19,7 @@ carro.add_instance(["Toyota",29])
 carro.add_instance(["Mitono",35])
 database.append(carro)
 
-running = True
+running:bool = True
 while(running):
     try:
         text = input()
@@ -31,6 +31,6 @@ while(running):
             print()
             query.print()
             print()
-    except Exception as e:
+    except ValueError as e:
         print(e)
 

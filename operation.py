@@ -56,20 +56,20 @@ class NegativeOperation(Operation):
         print(")",end='')
 
 class BinaryOperation(Operation):
-        bin_symbol = ' '
-        def value(self,tables,indexes):
-            pass
+    bin_symbol = ' '
+    def value(self,tables,indexes):
+        pass
 
-        def __init__(self,opA,opB):
-            self.opA = opA #operacao A, a esquerda
-            self.opB = opB #operacao B, a direita
-        
-        def print(self):
-            print("(",end='')
-            self.opA.print()
-            print(")"+self.bin_symbol+"(",end='')
-            self.opB.print()
-            print(")",end='')
+    def __init__(self,opA,opB):
+        self.opA = opA #operacao A, a esquerda
+        self.opB = opB #operacao B, a direita
+    
+    def print(self):
+        print("(",end='')
+        self.opA.print()
+        print(")"+self.bin_symbol+"(",end='')
+        self.opB.print()
+        print(")",end='')
 
 class SetOperation(BinaryOperation):
     bin_symbol = SET
@@ -119,7 +119,7 @@ class SumOperation(BinaryOperation):
 class SubtractOperation(BinaryOperation):
     bin_symbol = SUBTRACT
     def value(self,tables,indexes):
-        return self.opA.value(tables,indexes) + self.opB.value(tables,indexes)
+        return self.opA.value(tables,indexes) - self.opB.value(tables,indexes)
 
 class AndOperation(BinaryOperation):
     bin_symbol = AND
@@ -141,11 +141,11 @@ class OrOperation(BinaryOperation):
     
 operationBias = (SEPARATE,SET,AND,OR,EQUAL,NOT_EQUAL,GREATER,LESSER,NOT, MULTIPLY,DIVIDE,SUM,SUBTRACT) #tuple com o bias para separar operacoes, com as strings de cada operacao
 def binaryOperationRecursion(operation,text,i):
-        opA = text[:i]
-        opB = text[i+1:]
-        if opA == [] or opB == []:
-            raise Exception("Operação '"+operation+"' necessita de duas entradas: "+ ' '.join(str(element) for element in text))
-        return opA,opB
+    opA = text[:i]
+    opB = text[i+1:]
+    if opA == [] or opB == []:
+        raise ValueError("Operação '"+operation+"' necessita de duas entradas: "+ ' '.join(str(element) for element in text))
+    return opA,opB
 
 SET_OP = 0
 VAL_OP = 1
@@ -155,7 +155,7 @@ def createOperation(sep_text,kind = GEN_OP):
         return ConstantOperation(True)
     
     if  not validParenthesis(sep_text):
-        raise Exception("Parênteses não válidos: "+' '.join(str(element) for element in sep_text))
+        raise ValueError("Parênteses não válidos: "+' '.join(str(element) for element in sep_text))
     removeUnecessaryParenthesis(sep_text)
     text_len = len(sep_text)
     in_parenthesis = 0
@@ -184,10 +184,10 @@ def createOperation(sep_text,kind = GEN_OP):
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
         return SeparateOperation(createOperation(opA,SET_OP),createOperation(opB,SET_OP))
     elif kind == SET_OP:
-        raise Exception("Operação de SET não válida.")
+        raise ValueError("Operação de SET não válida.")
     
     if kind == VAL_OP and (len(sep_text) != 1 or type(sep_text[0]) != TableCoordinate):
-        raise Exception("Operação de Variável não válida.")
+        raise ValueError("Operação de Variável não válida.")
 
     if next_operation == AND:
         opA,opB = binaryOperationRecursion(next_operation,sep_text,i)
@@ -218,22 +218,22 @@ def createOperation(sep_text,kind = GEN_OP):
         return SumOperation(createOperation(opA),createOperation(opB))
     elif next_operation == SUBTRACT:
         if sep_text[:i]!=[] and sep_text[i+1:]==[] or sep_text[:i]==[] and sep_text[i+1:]==[]:
-            raise Exception("Operação '" + next_operation+"' necessita de ao menos uma entrada: " + ' '.join(str(element) for element in sep_text))
+            raise ValueError("Operação '" + next_operation+"' necessita de ao menos uma entrada: " + ' '.join(str(element) for element in sep_text))
         elif sep_text[:i]==[]:
             return NegativeOperation(createOperation(sep_text[i+1:]))
-        return SubtractOperation(createOperation(sep_text[:i],sep_text[i+1:]))
+        return SubtractOperation(createOperation(sep_text[:i]),createOperation(sep_text[i+1:]))
         
     elif next_operation == NOT:
         if sep_text[:i]!=[] or sep_text[i+1:]==[]:
-            raise Exception("Operação '" + next_operation+"' necessita de exatamente uma entrada: " + ' '.join(str(element) for element in sep_text))
+            raise ValueError("Operação '" + next_operation+"' necessita de exatamente uma entrada: " + ' '.join(str(element) for element in sep_text))
         return NotOperation(createOperation(sep_text[i+1:]))
     elif next_operation == '':
         if len(sep_text) != 1:
-            raise Exception("Operação deveria ser constante ou variável, potabrém não o é: "+ ' '.join(str(element) for element in sep_text))
+            raise ValueError("Operação deveria ser constante ou variável, potabrém não o é: "+ ' '.join(str(element) for element in sep_text))
         if type(sep_text[0]) == TableCoordinate:
             return VariableOperation(sep_text[0])
         return ConstantOperation(sep_text[0])
-    raise Exception("Não foi possível analisar a operação " + next_operation + " neste contexto.")
+    raise ValueError("Não foi possível analisar a operação " + next_operation + " neste contexto.")
 
             
             
