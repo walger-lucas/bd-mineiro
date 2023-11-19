@@ -15,7 +15,15 @@ for filename in files:
     for col in df.columns:
         tabela.add_column(col.strip(" '\""))
     for i in range(len(df)):
-        tabela.add_instance(df.loc[i])
+        inst = []
+        for j in range(len(df.loc[i])):
+            if type(df.loc[i][j]) == str:
+                aux = df.loc[i][j]
+                aux = aux[1:len(aux)-1]
+                inst.append(aux)
+            else:
+                inst.append(df.loc[i][j])
+        tabela.add_instance(inst)
     database.append(tabela)
     
 running:bool = True
