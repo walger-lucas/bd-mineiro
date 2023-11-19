@@ -29,9 +29,8 @@ class Table:
     # adiciona uma coluna
     def add_column(self,name):
         self.columnNames.append(name)
-        print(self.columnNames)
         for row in self.rows:
-            row.append(None);
+            row.append(None)
     
     def print(self):
         format_table = "{:>15}"* len(self.columnNames)
