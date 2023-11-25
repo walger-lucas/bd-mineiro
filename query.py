@@ -6,6 +6,8 @@ from mergeSort import *
 from database import exitDatabase
 import glob
 import pandas as pd
+import mysql.connector
+import csv
 
         
 #cria instancia com as colunas dadas
@@ -222,9 +224,86 @@ def updateQuery(sep_query):
         file = "./"+tables[0].name+".csv"
         df.to_csv(file, index=False)
 
+def importQuery(sep_query):
+        len_q =  len(sep_query)
+        if len_q == 3 and sep_query[1] == CSV:
+            print(sep_query[2].strip("\'"))
+            try:
+                qntd = len(sep_query[2].strip("\'").split('/'))
+                tamanho = len(sep_query[2].strip("\'").split('/')[qntd-1])
+                nome = sep_query[2].strip("\'").split('/')[qntd-1][:tamanho-4]
+                tabela = Table(sep_query[2].strip("\'").split('/')[qntd-1][:tamanho-4])
+                print(sep_query[2].strip("\'").split('/'))
+                df = pd.read_csv(sep_query[2].strip("\'"), index_col=None)
+                for col in df.columns:
+                    tabela.add_column(col.strip(" '\""))
+                for i in range(len(df)):
+                    inst = []
+                    for j in range(len(df.loc[i])):
+                        if type(df.loc[i][j]) == str:
+                            aux = df.loc[i][j]
+                            aux = aux[1:len(aux)-1]
+                            inst.append(aux)
+                        else:
+                            inst.append(df.loc[i][j])
+                    tabela.add_instance(inst)
+                existe = False
+                for tables in database:
+                    if(tables.name == nome):
+                        existe = True
+                if not existe:
+                    database.append(tabela)
+                    df.to_csv('./'+ nome + '.csv', index=False)
+                else:
+                    raise Exception("Tabela já existe.")
+            except FileNotFoundError as e:
+                raise Exception("Arquivo não existe.")
+            print(df)
+        elif len_q == 12 and sep_query[1] == MYSQL:
+            try:
+                mydb = mysql.connector.connect(
+                    host=sep_query[3],
+                    user=sep_query[5],
+                    password=sep_query[7],
+                    database= sep_query[9]
+                )
+                df = pd.read_sql_query("SELECT * FROM " + str(sep_query[11]), con=mydb)
+                print(df)
+            except mysql.connector.Error as err:
+                print("Something went wrong: {}".format(err))
+            existe = False
+            for tables in database:
+                if(tables.name == str(sep_query[11])):
+                    existe = True
+            if not existe:
+                df.to_csv('./'+ str(sep_query[11]) + '.csv', index=False, quotechar="'", quoting=csv.QUOTE_NONNUMERIC)
+            else:
+                raise Exception("Tabela já existe.")
+            tabela = Table(str(sep_query[11]))
+            df = pd.read_csv('./'+str(sep_query[11])+'.csv', index_col=None)
+            print(df)
+            for col in df.columns:
+                tabela.add_column(col.strip(" '\""))
+                print(col.strip(" '\""))
+            print(tabela.columnNames)
+            for i in range(len(df)):
+                inst = []
+                for j in range(len(df.loc[i])):
+                    if type(df.loc[i][j]) == str:
+                        aux = df.loc[i][j]
+                        aux = aux[1:len(aux)-1]
+                        inst.append(aux)
+                    else:
+                        inst.append(df.loc[i][j])
+                tabela.add_instance(inst)
+            database.append(tabela)
+            
+
 # Analisa as queries de import e de select, delete, update e insert
 def runQuery(query: str):
     sep_query = separator(query)
+    print(database[0].name)
+    print(sep_query)
     if sep_query ==[]:
         return
     #faz o parsing adequado dependendo do tipo de query
@@ -236,6 +315,8 @@ def runQuery(query: str):
         deleteQuery(sep_query)
     elif UPDATE == sep_query[0]:
         updateQuery(sep_query)
+    elif IMPORT == sep_query[0]:
+        importQuery(sep_query)
 
 
             
