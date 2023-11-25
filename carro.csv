@@ -1,4 +1,5 @@
-'Cor', 'Idade'
-'Toyota',29
-'Mitono',35
-'Fit',10
+'id','cor', 'idade', 'donoID'
+0,'Vermelho',29,4
+1,'Azul',35,0
+2,'Verde',10,2
+1003,'Azul',10,1001

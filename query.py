@@ -145,7 +145,7 @@ def insertQuery(sep_query):
         insert_q,value_q = separateInsertQuery(sep_query)
         tables = findTables(insert_q)
         if len(tables) != 1:
-            raise Exception('Você apenas pode inserir um valor a uma table, não várias.')
+            raise ValueError('Você apenas pode inserir um valor a uma table, não várias.')
         insertion = findValues(value_q)
         tables[0].add_instance(insertion)
         file = glob.glob("./"+insert_q[0]+".csv")
@@ -183,13 +183,13 @@ def deleteQuery(sep_query):
         delete_tables = findTables(delete_q)
         len_tables = len(tables)
         if len(delete_tables) !=1:
-            raise Exception("Apenas pode-se deletar de uma table por vez.")
+            raise ValueError("Apenas pode-se deletar de uma table por vez.")
         t=0
         while t<len_tables:
             if tables[t].name == delete_tables[0].name:
                 break
         if t == len_tables:
-            raise Exception("Apenas pode-se deletar de uma table que esteja na query.")
+            raise ValueError("Apenas pode-se deletar de uma table que esteja na query.")
 
         # descobre a operacao de where
         operation = createOperation(setupVariablesAndConstants(where_q,tables))
@@ -211,7 +211,7 @@ def updateQuery(sep_query):
         update_q,set_q,where_q,order_q = separateSelectQuery(sep_query)
         tables = findTables(update_q)
         if(len(update_q)!=1):
-            raise Exception("Apenas pode-se atualizar uma tabela por vez.")
+            raise ValueError("Apenas pode-se atualizar uma tabela por vez.")
         set_operation = createOperation(setupVariablesAndConstants(set_q,tables),SET_OP)
         where_operation = createOperation(setupVariablesAndConstants(where_q,tables))
         runUpdate(tables,set_operation,where_operation)

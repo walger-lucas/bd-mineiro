@@ -33,9 +33,20 @@ class Table:
             row.append(None)
     
     def print(self):
-        format_table = "{:>15}"* len(self.columnNames)
+        max = 0;
+        for name in self.columnNames:
+            size = len(name)
+            if max< size:
+                max = size
+        for row in self.rows:
+            for instance in row:
+                size = len(str(instance))
+                if max< size:
+                    max = size
+
+        format_table = ("{:>"+str(max+4)+"}")* len(self.columnNames)
         print(format_table.format(*self.columnNames))
-        print('-'*len(self.columnNames)*15)
+        print('-'*len(self.columnNames)*(max+4))
         for row in self.rows:
             print(format_table.format(*printable_none(row)))
             
