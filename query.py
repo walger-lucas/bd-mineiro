@@ -302,8 +302,6 @@ def importQuery(sep_query):
 # Analisa as queries de import e de select, delete, update e insert
 def runQuery(query: str):
     sep_query = separator(query)
-    print(database[0].name)
-    print(sep_query)
     if sep_query ==[]:
         return
     #faz o parsing adequado dependendo do tipo de query
