@@ -24,6 +24,7 @@ for filename in files:
             else:
                 inst.append(df.loc[i][j])
         tabela.add_instance(inst)
+    print(tabela.columnNames)
     database.append(tabela)
     
 running:bool = True
