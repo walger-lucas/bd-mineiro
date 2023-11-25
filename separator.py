@@ -5,7 +5,7 @@ from database import database
 # transformar este parsing em objetos úteis para a realização das queries
 
 # palavras de divisao da string de parsing
-divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',SEPARATE,SET,SELECT,FROM,WHERE,ASC, DESC,INSERT_INTO,VALUE,ON, JOIN,DELETE,UPDATE,SET_TEXT,MULTIPLY,DIVIDE,SUM,SUBTRACT,ORDER_BY)
+divisorWords = (AND,OR,EQUAL,NOT_EQUAL,LESSER,GREATER,NOT,'(',')',SEPARATE,SET,SELECT,FROM,WHERE,ASC, DESC,INSERT_INTO,VALUE,ON, JOIN,DELETE,UPDATE,SET_TEXT,MULTIPLY,DIVIDE,SUM,SUBTRACT,ORDER_BY, IMPORT, CSV, MYSQL, HOST, USER, SENHA, TABELA, DATABASE)
 # append da palavra nao divisora entre palavras divisoras
 def tryAppendLastWord(text,word_start,word_end, separated_text):
     if word_start >= len(text):
@@ -121,9 +121,9 @@ def isTable(word,tables):
         if (word[i]=='.' and dot_position == -1 ):
             dot_position=i
         elif word[i]=='.':
-            raise ValueError(word + "não é uma variável válida.")
+            raise ValueError(word + " não é uma variável válida.")
     if dot_position == -1:
-        raise ValueError(word + "não é uma variável válida.")
+        raise ValueError(word + " não é uma variável válida.")
     tables_len = len(tables)
     found_table = False
     for j in range(tables_len):
