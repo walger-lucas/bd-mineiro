@@ -1,5 +1,4 @@
 import pandas as pd
-import mysql.connector
 
 ##Transforma o row, tirando seus nones e trocando por uma string 'Null'
 def printable_none(row):
