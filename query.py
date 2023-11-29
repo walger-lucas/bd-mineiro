@@ -150,16 +150,7 @@ def insertQuery(sep_query):
             raise ValueError('Você apenas pode inserir um valor a uma table, não várias.')
         insertion = findValues(value_q)
         tables[0].add_instance(insertion)
-        file = glob.glob("./"+insert_q[0]+".csv")
-        df = pd.read_csv(file[0], index_col=None)
-        texto=[]
-        for i in range(len(insertion)):
-            if not (type(insertion[i])==str):
-                texto.append(insertion[i])
-            else:
-                texto.append("\'"+str(insertion[i].strip("\"\'"))+"\'")
-        df.loc[len(df)] = texto
-        df.to_csv(file[0], index=False)
+        tables[0].store()
 
 #  processos para a query de deletion
 def deleteQuery(sep_query):
@@ -196,12 +187,7 @@ def deleteQuery(sep_query):
         # descobre a operacao de where
         operation = createOperation(setupVariablesAndConstants(where_q,tables))
         runDelete(t,tables,operation)
-        dados = []
-        for i in range(len(delete_tables[0].rows)):
-            dados.append(delete_tables[0].rows[i])
-        df = pd.DataFrame(dados)
-        file = "./"+delete_tables[0].name+".csv"
-        df.to_csv(file, index=False)
+        delete_tables[0].store()
 
 # processos para query de update
 def updateQuery(sep_query):
@@ -217,12 +203,7 @@ def updateQuery(sep_query):
         set_operation = createOperation(setupVariablesAndConstants(set_q,tables),SET_OP)
         where_operation = createOperation(setupVariablesAndConstants(where_q,tables))
         runUpdate(tables,set_operation,where_operation)
-        dados = []
-        for i in range(len(tables[0].rows)):
-            dados.append(tables[0].rows[i])
-        df = pd.DataFrame(dados)
-        file = "./"+tables[0].name+".csv"
-        df.to_csv(file, index=False)
+        tables[0].store()
 
 def importQuery(sep_query):
         len_q =  len(sep_query)

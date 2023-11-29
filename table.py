@@ -1,3 +1,6 @@
+import pandas as pd
+import mysql.connector
+
 ##Transforma o row, tirando seus nones e trocando por uma string 'Null'
 def printable_none(row):
     new_row = []
@@ -49,8 +52,6 @@ class Table:
         print('-'*len(self.columnNames)*(max+4))
         for row in self.rows:
             print(format_table.format(*printable_none(row)))
-            
-
 
     #se possui coluna a encontra, dependente de case
     def getColumn(self,name):
@@ -65,6 +66,28 @@ class Table:
     
     def rowCount(self):
         return len(self.rows)
+    
+    #guarda tabela em csv
+    def store(self):
+        dados = []
+
+        headers =[]
+        for header in self.columnNames:
+           headers.append( "\'"+header+"\'" )
+        dados.append(headers)
+        row_len = self.rowCount()
+        column_len = len(self.columnNames)
+        for i in range(row_len):
+            row = []
+            for dado in self.rows[i]:
+                if type(dado) == str:
+                   dado = "\'"+dado+"\'"
+                row.append(dado)
+            print(row)
+            dados.append(row)
+        df = pd.DataFrame(dados)
+        file = "./"+self.name+".csv"
+        df.to_csv(file, index=False,header=False)
 
     
     
