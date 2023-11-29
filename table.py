@@ -83,7 +83,6 @@ class Table:
                 if type(dado) == str:
                    dado = "\'"+dado+"\'"
                 row.append(dado)
-            print(row)
             dados.append(row)
         df = pd.DataFrame(dados)
         file = "./"+self.name+".csv"
