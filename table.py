@@ -36,7 +36,7 @@ class Table:
             row.append(None)
     
     def print(self):
-        max = 0;
+        max = 0
         for name in self.columnNames:
             size = len(name)
             if max< size:
